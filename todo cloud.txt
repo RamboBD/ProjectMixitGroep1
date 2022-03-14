@@ -1,0 +1,14 @@
+1. create a new repository just for cloud minor and transfer all relevant files from my genral school repository
+ to the new one and include it in the portfolio.
+
+2.finish the devops pipeline courses
+
+3.
+
+portfolio setup 
+
+- introductie
+- learning journey
+- foto's badges cursuses
+- link naar gitlab voor code 
+- foto's badges
