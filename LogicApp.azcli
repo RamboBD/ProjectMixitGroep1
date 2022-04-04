@@ -4,5 +4,10 @@ az extension add --name logic
 
 az config set extension.use_dynamic_install=yes_without_prompt
 
-az logic workflow create --resource-group "Self-HBO-ICT" --location "centralus" --name "cli_logicapp" --definition "G:\Brian-Git\ProjectMixitGroep1\OutlookCalander.json"
+az logic workflow create --resource-group "appsvc_linux_centralus" --location "centralus" --name "cli_logicapp" --definition "G:\Brian-Git\ProjectMixitGroep1\OutlookCalander.json"
 
+az group create --name testResourceGroup --location westus
+
+az logic workflow list --resource-group "appsvc_linux_centralus"
+
+az --version
