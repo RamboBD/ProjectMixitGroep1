@@ -1,0 +1,113 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Agendaweergave_van_gebeurtenissen_ophalen_(V3)": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/calendars/v3/tables/items/calendarview",
+                    "queries": {
+                        "calendarId": "AAMkAGNhNWM0Yzg0LTkxNmItNDc1Yi1iYWJhLWJhMzBlYjM3YzAyMgBGAAAAAAAc7Fd32L6kR5POWFRaRV9_BwDr1c54YndvTL9GGqDod-TPAAAAAAEGAADr1c54YndvTL9GGqDod-TPAABpeRU3AAA=",
+                        "endDateTimeUtc": "@triggerBody()?['end']",
+                        "startDateTimeUtc": "@triggerBody()?['start']"
+                    }
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            },
+            "For_each": {
+                "actions": {
+                    "Send_an_email_(V2)": {
+                        "inputs": {
+                            "body": {
+                                "Body": "<p>Dit item is toegevoegd/geweizigd.<br>\n<br>\n@{items('For_each')?['subject']}<br>\n@{items('For_each')?['start']}<br>\n@{items('For_each')?['end']}<br>\n@{items('For_each')?['body']}</p>",
+                                "Subject": "Agenda melding",
+                                "To": "briandekk@gmail.com"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['office365']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/Mail"
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "foreach": "@body('Agendaweergave_van_gebeurtenissen_ophalen_(V3)')?['value']",
+                "runAfter": {
+                    "Agendaweergave_van_gebeurtenissen_ophalen_(V3)": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "Gebeurtenissen_ophalen_(V4)": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/calendars/v4/tables/@{encodeURIComponent(encodeURIComponent('AAMkAGNhNWM0Yzg0LTkxNmItNDc1Yi1iYWJhLWJhMzBlYjM3YzAyMgBGAAAAAAAc7Fd32L6kR5POWFRaRV9_BwDr1c54YndvTL9GGqDod-TPAAAAAAEGAADr1c54YndvTL9GGqDod-TPAABpeRU3AAA='))}/items"
+                },
+                "runAfter": {
+                    "For_each": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Wanneer_een_gebeurtenis_wordt_gewijzigd_(V3)": {
+                "evaluatedRecurrence": {
+                    "frequency": "Minute",
+                    "interval": 3
+                },
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/calendars/v3/tables/@{encodeURIComponent(encodeURIComponent('AAMkAGNhNWM0Yzg0LTkxNmItNDc1Yi1iYWJhLWJhMzBlYjM3YzAyMgBGAAAAAAAc7Fd32L6kR5POWFRaRV9_BwDr1c54YndvTL9GGqDod-TPAAAAAAEGAADr1c54YndvTL9GGqDod-TPAABpeRU3AAA='))}/onupdateditems"
+                },
+                "recurrence": {
+                    "frequency": "Minute",
+                    "interval": 3
+                },
+                "splitOn": "@triggerBody()?['value']",
+                "type": "ApiConnection"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "office365": {
+                    "connectionId": "/subscriptions/a27f2f09-058f-41f4-978c-6f278ee74f7e/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/connections/office365",
+                    "connectionName": "office365",
+                    "id": "/subscriptions/a27f2f09-058f-41f4-978c-6f278ee74f7e/providers/Microsoft.Web/locations/northcentralus/managedApis/office365"
+                }
+            }
+        }
+    }
+}

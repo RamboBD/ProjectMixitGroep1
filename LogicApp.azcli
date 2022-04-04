@@ -1,0 +1,3 @@
+az login
+
+workflow create --resource-group "Self-HBO-ICT" --location "centralus" --name "cli_logicapp" --definition "OutlookCalander.json"
