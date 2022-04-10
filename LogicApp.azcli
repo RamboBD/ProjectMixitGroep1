@@ -4,7 +4,9 @@ az extension add --name logic
 
 az config set extension.use_dynamic_install=yes_without_prompt
 
-az logic workflow create --resource-group appsvc_linux_centralus --location centralus --name cli_logicapp --definition "G:\Brian-Git\ProjectMixitGroep1\OutlookCalander.json"
+az logic workflow create --resource-group appsvc_linux_centralus --location westeurope --name cli_logicapp --definition "G:\Brian-Git\ProjectMixitGroep1\OutlookCalander.json"
+
+az logic workflow create --resource-group appsvc_linux_centralus --location northcentralus --name cli_DBApp --definition "G:\Brian-Git\ProjectMixitGroep1\OutlookCalanderWithTableStorage.json"
 
 az group create --name testResourceGroup --location westus
 
