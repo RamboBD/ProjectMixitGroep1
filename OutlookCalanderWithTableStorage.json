@@ -1,0 +1,182 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Agendaweergave_van_gebeurtenissen_ophalen_(V3)": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/calendars/v3/tables/items/calendarview",
+                    "queries": {
+                        "calendarId": "AAMkAGNhNWM0Yzg0LTkxNmItNDc1Yi1iYWJhLWJhMzBlYjM3YzAyMgBGAAAAAAAc7Fd32L6kR5POWFRaRV9_BwDr1c54YndvTL9GGqDod-TPAAAAAAEGAADr1c54YndvTL9GGqDod-TPAABpeRU3AAA=",
+                        "endDateTimeUtc": "@triggerBody()?['end']",
+                        "startDateTimeUtc": "@triggerBody()?['start']"
+                    }
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            },
+            "For_each": {
+                "actions": {
+                    "Insert_or_Replace_Entity": {
+                        "inputs": {
+                            "body": {
+                                "Details": "@{variables('AppointmentBody')}",
+                                "EndTime": "@{items('For_each')?['end']}",
+                                "Location": "@{items('For_each')?['location']}",
+                                "StartTime": "@{items('For_each')?['start']}"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azuretables']['connectionId']"
+                                }
+                            },
+                            "method": "put",
+                            "path": "/Tables/@{encodeURIComponent('BrianAgenda')}/entities(PartitionKey='@{encodeURIComponent(items('For_each')?['id'])}',RowKey='@{encodeURIComponent(items('For_each')?['subject'])}')"
+                        },
+                        "runAfter": {
+                            "Send_an_email_(V2)": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Send_an_email_(V2)": {
+                        "inputs": {
+                            "body": {
+                                "Body": "<p>Dit item is toegevoegd/geweizigd.<br>\n<br>\n@{items('For_each')?['subject']}<br>\n@{items('For_each')?['start']}<br>\n@{items('For_each')?['end']}<br>\n@{items('For_each')?['body']}</p>",
+                                "Subject": "Agenda melding",
+                                "To": "briandekk@gmail.com"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['office365']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/Mail"
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "foreach": "@body('Agendaweergave_van_gebeurtenissen_ophalen_(V3)')?['value']",
+                "runAfter": {
+                    "For_each_2": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "For_each_2": {
+                "actions": {
+                    "Append_to_string_variable": {
+                        "inputs": {
+                            "name": "AppointmentBody",
+                            "value": "@body('Html_to_text')"
+                        },
+                        "runAfter": {
+                            "Html_to_text": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "AppendToStringVariable"
+                    },
+                    "Html_to_text": {
+                        "inputs": {
+                            "body": "<p>@{items('For_each_2')?['body']}</p>",
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['conversionservice']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/html2text"
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "foreach": "@body('Agendaweergave_van_gebeurtenissen_ophalen_(V3)')?['value']",
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "AppointmentBody",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Agendaweergave_van_gebeurtenissen_ophalen_(V3)": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Wanneer_een_gebeurtenis_wordt_gewijzigd_(V3)": {
+                "evaluatedRecurrence": {
+                    "frequency": "Hour",
+                    "interval": 24
+                },
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['office365']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/calendars/v3/tables/@{encodeURIComponent(encodeURIComponent('AAMkAGNhNWM0Yzg0LTkxNmItNDc1Yi1iYWJhLWJhMzBlYjM3YzAyMgBGAAAAAAAc7Fd32L6kR5POWFRaRV9_BwDr1c54YndvTL9GGqDod-TPAAAAAAEGAADr1c54YndvTL9GGqDod-TPAABpeRU3AAA='))}/onupdateditems"
+                },
+                "recurrence": {
+                    "frequency": "Hour",
+                    "interval": 24
+                },
+                "splitOn": "@triggerBody()?['value']",
+                "type": "ApiConnection"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azuretables": {
+                    "connectionId": "/subscriptions/a27f2f09-058f-41f4-978c-6f278ee74f7e/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/connections/azuretables",
+                    "connectionName": "azuretables",
+                    "id": "/subscriptions/a27f2f09-058f-41f4-978c-6f278ee74f7e/providers/Microsoft.Web/locations/northcentralus/managedApis/azuretables"
+                },
+                "conversionservice": {
+                    "connectionId": "/subscriptions/a27f2f09-058f-41f4-978c-6f278ee74f7e/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/connections/conversionservice",
+                    "connectionName": "conversionservice",
+                    "id": "/subscriptions/a27f2f09-058f-41f4-978c-6f278ee74f7e/providers/Microsoft.Web/locations/northcentralus/managedApis/conversionservice"
+                },
+                "office365": {
+                    "connectionId": "/subscriptions/a27f2f09-058f-41f4-978c-6f278ee74f7e/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/connections/office365",
+                    "connectionName": "office365",
+                    "id": "/subscriptions/a27f2f09-058f-41f4-978c-6f278ee74f7e/providers/Microsoft.Web/locations/northcentralus/managedApis/office365"
+                }
+            }
+        }
+    }
+}
